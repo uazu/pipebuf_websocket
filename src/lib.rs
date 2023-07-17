@@ -80,11 +80,17 @@ impl WebsocketServer {
     /// protection against denial of service attacks.  In case of
     /// exceeding this limit, `Error::WriteToBufferTooSmall` is
     /// returned.
-    pub fn from_http(
+    ///
+    /// `header_cb` is called for each HTTP header line as
+    /// `header_cb(field_name, field_value)` once the websocket
+    /// connection has been verified in order to allow the caller to
+    /// extract whatever details may be required, such as `Origin`.
+    pub fn from_http_scan(
         mut pb: PBufRdWr,
         subprotocol: Option<&WebSocketSubProtocol>,
         max_msg_len: usize,
         max_aux_len: usize,
+        mut header_cb: impl FnMut(&str, &[u8]),
     ) -> Result<Option<Self>, ws::Error> {
         // `Header` is 2 pointers, so this is 128 bytes (on 64-bit)
         let mut headers = [httparse::EMPTY_HEADER; 32];
@@ -103,6 +109,9 @@ impl WebsocketServer {
                             subprotocol,
                             pb.wr.space(1024),
                         )?;
+                        for h in request.headers.iter() {
+                            header_cb(h.name, h.value);
+                        }
                         pb.wr.commit(blen);
                         pb.rd.consume(count);
                         Ok(Some(Self::from_wss(ws, max_msg_len, max_aux_len)))
@@ -110,6 +119,20 @@ impl WebsocketServer {
                 }
             }
         }
+    }
+
+    /// Attempt to interpret the initial data in the given pipe-buffer
+    /// stream as websocket HTTP headers and initialise the websocket
+    /// stream from them.
+    ///
+    /// See [`from_http_scan`] for details of arguments and returns.
+    pub fn from_http(
+        pb: PBufRdWr,
+        subprotocol: Option<&WebSocketSubProtocol>,
+        max_msg_len: usize,
+        max_aux_len: usize,
+    ) -> Result<Option<Self>, ws::Error> {
+        Self::from_http_scan(pb, subprotocol, max_msg_len, max_aux_len, |_, _| ())
     }
 
     /// Create from an already-initialised [`WebSocketServer`]
