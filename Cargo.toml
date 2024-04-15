@@ -1,6 +1,6 @@
 [package]
 name = "pipebuf_websocket"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 authors = ["Jim Peters <jim@uazu.net>"]
 
@@ -15,6 +15,6 @@ keywords = ["websocket","websockets","async","pipebuf"]
 categories = [ "asynchronous", "network-programming" ]
 
 [dependencies]
-pipebuf = "0.2"
-embedded-websocket = "0.8"
+pipebuf = "0.3"
+embedded-websocket = "0.8"  # Not 0.9 as that pulls in futures
 httparse = { version = "1.4", default-features = false }

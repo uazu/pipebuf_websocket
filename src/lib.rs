@@ -125,7 +125,8 @@ impl WebsocketServer {
     /// stream as websocket HTTP headers and initialise the websocket
     /// stream from them.
     ///
-    /// See [`from_http_scan`] for details of arguments and returns.
+    /// See [`WebsocketServer::from_http_scan`] for details of
+    /// arguments and returns.
     pub fn from_http(
         pb: PBufRdWr,
         subprotocol: Option<&WebSocketSubProtocol>,
